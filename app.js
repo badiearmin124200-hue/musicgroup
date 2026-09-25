@@ -4850,80 +4850,65 @@ if (audioPlayer) {
 ========================================================= */
 
 async function loadMusicLibrary() {
-
-    if (!libraryTracks) {
-        return;
-    }
+    if (!libraryTracks) return;
 
     try {
+        const res = await fetch(`${BACKEND_URL}/api/music/library`, {
+            method: "GET",
+            headers: {
+                "Accept": "application/json",
+                "ngrok-skip-browser-warning": "true"
+            },
+            cache: "no-store",
+        });
 
-        const response = await fetch(
-            `${BACKEND_URL}/api/music/library`,
-            {
-                cache: "no-store"
-            }
-        );
-
-        if (!response.ok) {
-
-
-            throw new Error(
-                "Library request failed"
-            );
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
         }
 
-        const data =
-            await response.json();
+        const data = await res.json();
+        const incomingTracks = Array.isArray(data)
+            ? data
+            : (Array.isArray(data?.tracks) ? data.tracks : []);
 
-        const tracks =
-            Array.isArray(
-                data.tracks
-            )
-                ? data.tracks
-                : [];
+        const normalizedTracks = incomingTracks
+            .map((item, index) => normalizeTrack(item, index))
+            .filter(Boolean);
 
-        musicLibrary =
-            tracks
-                .map(
-                    normalizeTrack
-                )
-                .filter(
-                    Boolean
-                );
-
-        currentLibraryIndex =
-            findLibraryTrackIndex(
-                currentTrackId,
-                currentTrackUrl
-            );
-
-        if (
-            musicLibrary.length === 0
-        ) {
-
-            libraryTracks.innerHTML =
-                "<p>🎵 هنوز آهنگی در آرشیو نیست.</p>";
-
-            updateUI();
-
-            return;
+        if (normalizedTracks.length > 0) {
+            libraryTracks = normalizedTracks;
+        } else {
+            libraryTracks = [
+                {
+                    id: 1,
+                    title: "آهنگ نمونه ۱",
+                    artist: "FAZE Music",
+                    url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+                    duration: 372
+                },
+                {
+                    id: 2,
+                    title: "آهنگ نمونه ۲",
+                    artist: "FAZE Music",
+                    url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+                    duration: 423
+                }
+            ];
         }
 
-        renderMusicLibrary(
-            musicLibrary
-        );
+        renderMusicLibrary();
+        updateSelectedTrackVisuals();
 
-        updateUI();
+        if (window.Telegram?.WebApp?.HapticFeedback) {
+            window.Telegram.WebApp.HapticFeedback.notificationOccurred("success");
+        }
+    } catch (err) {
+        console.error("Music library error:", err);
+        showToast("دریافت آرشیو ناموفق بود");
 
-    } catch (error) {
-
-        console.error(
-            "Music library error:",
-            error
-        );
-
-        libraryTracks.innerHTML =
-            "<p>❌ دریافت آرشیو ناموفق بود.</p>";
+        if (window.Telegram?.WebApp?.HapticFeedback) {
+            window.Telegram.WebApp.HapticFeedback.notificationOccurred("error");
+        }
     }
 }
 
