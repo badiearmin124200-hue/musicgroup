@@ -9,7 +9,7 @@
 
 const telegramWebApp =
     window.Telegram?.WebApp || null;
-
+const BACKEND_URL = "https://lapping-sizzling-humongous.ngrok-free.dev";
 if (telegramWebApp) {
     telegramWebApp.ready();
     telegramWebApp.expand();
@@ -33,7 +33,7 @@ const roomId =
     params.get("room_id") ||
     telegramStartParam ||
     "";
-    const isGroupMusicRoom =
+const isGroupMusicRoom =
     roomId.startsWith("gmusic_") ||
     roomId.startsWith("gm_");
 
@@ -728,9 +728,9 @@ function getUserDisplayName(
         (
             user.id
                 ? "کاربر " +
-                  String(
-                      user.id
-                  ).slice(-4)
+                String(
+                    user.id
+                ).slice(-4)
                 : "کاربر"
         )
     );
@@ -998,96 +998,54 @@ function setConnectionState(
 ========================================================= */
 
 function buildWebSocketUrl() {
-
     if (!roomId) {
         return "";
     }
 
+    const backendUrl = BACKEND_URL.replace(/\/+$/, "");
 
-    const protocol =
-        window.location.protocol ===
-        "https:"
-            ? "wss:"
-            : "ws:";
-
+    const protocol = backendUrl.startsWith("https://")
+        ? "wss:"
+        : "ws:";
 
     let path;
 
-
-    if (
-        isSyntheticDevRoom
-    ) {
-
-        path =
-            "/ws/music-dev";
-
+    if (isSyntheticDevRoom) {
+        path = "/ws/music-dev";
     } else {
-
         path =
             "/ws/music/" +
-            encodeURIComponent(
-                roomId
-            );
+            encodeURIComponent(roomId);
     }
-
 
     let url =
         protocol +
         "//" +
-        window.location.host +
+        backendUrl.replace(/^https?:\/\//, "") +
         path;
 
-
-    const query =
-        new URLSearchParams();
-
+    const query = new URLSearchParams();
 
     if (token) {
-
-        query.set(
-            "token",
-            token
-        );
+        query.set("token", token);
     }
-
 
     if (telegramInitData) {
-
-        query.set(
-            "init_data",
-            telegramInitData
-        );
+        query.set("init_data", telegramInitData);
     }
 
-
-    if (
-        devUser === "1" ||
-        devUser === "2"
-    ) {
-
-        query.set(
-            "dev_user",
-            devUser
-        );
+    if (devUser === "1" || devUser === "2") {
+        query.set("dev_user", devUser);
     }
 
-
-    const queryString =
-        query.toString();
-
+    const queryString = query.toString();
 
     if (queryString) {
-
-        url +=
-            "?" +
-            queryString;
+        url += "?" + queryString;
     }
-
 
     return url;
 }
-
-
 /* =========================================================
    WEBSOCKET CONNECT
 ========================================================= */
@@ -1280,7 +1238,7 @@ function connectWebSocket() {
 
                 try {
                     newSocket.close();
-                } catch (_) {}
+                } catch (_) { }
 
                 return;
             }
@@ -2875,8 +2833,7 @@ function renderRoomUsers(users) {
         if (groupRoomTitle) {
 
             groupRoomTitle.textContent =
-                `🎶 روم مخصوص گروه «${
-                    groupTitle || "FAZE"
+                `🎶 روم مخصوص گروه «${groupTitle || "FAZE"
                 }»`;
         }
 
@@ -3152,7 +3109,7 @@ function renderRoomUsers(users) {
                     if (
                         currentUserId &&
                         thisUserId ===
-                            currentUserId
+                        currentUserId
                     ) {
 
                         const meLabel =
@@ -3509,10 +3466,9 @@ function renderRoomUsers(users) {
             getUserDisplayName(user);
 
         element.textContent =
-            `${name} — ${
-                online
-                    ? "آنلاین"
-                    : "آفلاین"
+            `${name} — ${online
+                ? "آنلاین"
+                : "آفلاین"
             }`;
 
         element.classList.toggle(
@@ -3784,16 +3740,13 @@ if (musicFileInput) {
                     file
                 );
 
-                const response =
-                    await fetch(
-                        "/api/music/upload",
-                        {
-                            method:
-                                "POST",
-                            body:
-                                formData
-                        }
-                    );
+                const response = await fetch(
+                    `${BACKEND_URL}/api/music/upload`,
+                    {
+                        method: "POST",
+                        body: formData
+                    }
+                );
 
                 if (!response.ok) {
 
@@ -3809,7 +3762,7 @@ if (musicFileInput) {
                             errorData.detail ||
                             message;
 
-                    } catch (_) {}
+                    } catch (_) { }
 
                     throw new Error(
                         message
@@ -4563,9 +4516,9 @@ function leaveRoom() {
 
                         if (
                             socketToClose.readyState ===
-                                WebSocket.OPEN ||
+                            WebSocket.OPEN ||
                             socketToClose.readyState ===
-                                WebSocket.CLOSING
+                            WebSocket.CLOSING
                         ) {
 
                             socketToClose.close(
@@ -4815,7 +4768,7 @@ if (audioPlayer) {
                 audioPlayer.currentTime =
                     0;
 
-            } catch (_) {}
+            } catch (_) { }
 
             audioPlayer.playbackRate =
                 1;
@@ -4904,16 +4857,15 @@ async function loadMusicLibrary() {
 
     try {
 
-        const response =
-            await fetch(
-                "/api/music/library",
-                {
-                    cache:
-                        "no-store"
-                }
-            );
+        const response = await fetch(
+            `${BACKEND_URL}/api/music/library`,
+            {
+                cache: "no-store"
+            }
+        );
 
         if (!response.ok) {
+
 
             throw new Error(
                 "Library request failed"
@@ -5111,9 +5063,8 @@ function renderMusicLibrary(
                 );
 
             title.textContent =
-                `🎵 ${
-                    track.title ||
-                    "بدون نام"
+                `🎵 ${track.title ||
+                "بدون نام"
                 }`;
 
             const artist =
