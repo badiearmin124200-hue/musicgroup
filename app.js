@@ -533,14 +533,24 @@ function getTrackUrl(
         return "";
     }
 
-    return (
+    const url =
         track.file_url ||
         track.url ||
-        ""
-    );
+        "";
+
+    if (!url) {
+        return "";
+    }
+
+    if (url.startsWith("/")) {
+        return (
+            BACKEND_URL.replace(/\/+$/, "") +
+            url
+        );
+    }
+
+    return url;
 }
-
-
 function normalizeTrack(
     track
 ) {
